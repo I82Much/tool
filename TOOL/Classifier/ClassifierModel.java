@@ -41,7 +41,7 @@ import TOOL.Misc.Pair;
 public class ClassifierModel extends Observable implements DataListener//,
                                                            //ID_Queryable
 {
-    
+
     public static final int NO_IMAGES_LOADED = -1;
 
     // The TOOL object into which this Model is added.
@@ -53,12 +53,12 @@ public class ClassifierModel extends Observable implements DataListener//,
     // Holds all the objects for all the frames.  Each frame has
     // a corresponding ArrayList.
     protected ArrayList<ArrayList<ClassifierObject>> classifiedObjects;
+    protected ArrayList<Location> locations;
 
-    
 
     // Holds all the objects currently selected
     protected LinkedList<ClassifierObject> selected;
-    
+
     // Number of images in the current directory; determines the size of the
     // array we allocate
     protected int numImages = NO_IMAGES_LOADED;
@@ -69,8 +69,8 @@ public class ClassifierModel extends Observable implements DataListener//,
     protected static final int MIN_SIZE = 5;
     // We don't care about how far the mouse was dragged for a point
     protected static final int MIN_CORNER_SIZE = 0;
-    
-    
+
+
 
 
 
@@ -78,7 +78,7 @@ public class ClassifierModel extends Observable implements DataListener//,
     {
         LINE(MIN_SIZE),
             INNER_L_CORNER(MIN_CORNER_SIZE),
-            OUTER_L_CORNER(MIN_CORNER_SIZE), 
+            OUTER_L_CORNER(MIN_CORNER_SIZE),
             T_CORNER(MIN_CORNER_SIZE),
             BLUE_GOAL(MIN_SIZE),
             YELLOW_GOAL(MIN_SIZE),
@@ -91,7 +91,7 @@ public class ClassifierModel extends Observable implements DataListener//,
             YELLOW_BLUE_BEACON(MIN_SIZE),
             DOG(MIN_SIZE),
             MOVING(0);
-        
+
         //private class instantiation;
         private int minSize;
         ClassifierMode(int minSize) {
@@ -99,30 +99,29 @@ public class ClassifierModel extends Observable implements DataListener//,
         }
         public int getMinSize() { return minSize; }
     };
-   
+
     // the "moving" class mode doesn't correspond to an actual object
-    public static final int NUM_CLASS_OBJECTS = 
+    public static final int NUM_CLASS_OBJECTS =
         ClassifierMode.values().length  - 1;
 
     protected ClassifierMode mode;
-  
+
 
     /**
-     * Default constructor.  
+     * Default constructor.
      * @param t The TOOL instance associated with this Model.
      */
     public ClassifierModel(TOOL t) {
         this.tool = t;
-        
+
         // We start with an empty list of selected items.
         selected = new LinkedList<ClassifierObject>();
         mode = ClassifierMode.SELECTION;
-        
+
         // Take care of all the undo/redos of the model
         undoManager = new UndoManager();         // history list
         undoSupport = new UndoableEditSupport();
         undoSupport.addUndoableEditListener(new UndoAdapter());
-
     }
 
 
@@ -132,12 +131,22 @@ public class ClassifierModel extends Observable implements DataListener//,
      */
     private void initializeDataStructures(int numElements) {
         classifiedObjects = new ArrayList<ArrayList<ClassifierObject>>(numElements);
+        locations = new ArrayList<Location>(numElements);
         for (int i = 0; i < numElements; i++) {
             classifiedObjects.add(new ArrayList<ClassifierObject>());
-        }     
+            locations.add(new Location(0, 0));
+        }
     }
 
-    
+    public Location getLocation() {
+        if (locations != null) {
+            return locations.get(curImageIndex);
+        }
+        // Temporary hack.
+        return new Location(0,0);
+    }
+
+
     /**
      * @return true if and only if a data set has been loaded
      */
@@ -162,22 +171,22 @@ public class ClassifierModel extends Observable implements DataListener//,
         }
         notifyFrame(f);
     }
-    
+
     /**
      * Called whenever data manager changes frames; we notify all observers
      * of our model (so that they can get the most recent image, for instance)
-     */ 
+     */
     public void notifyFrame(Frame f) {
-        if (f == null || !f.hasImage()) { 
-            return; 
+        if (f == null || !f.hasImage()) {
+            return;
         }
         rawImage = f.image();
         curImageIndex = tool.getDataManager().activeFrameIndex();
-        
+
         setChanged();
         notifyObservers();
     }
-    
+
     /* Public methods for View to access */
     public ClassifierMode getMode() {
         return mode;
@@ -189,18 +198,18 @@ public class ClassifierModel extends Observable implements DataListener//,
         notifyObservers();
     }
 
-    public boolean hasClassifiedObjects() {        
-        return classifiedObjects != null && 
+    public boolean hasClassifiedObjects() {
+        return classifiedObjects != null &&
             !classifiedObjects.get(curImageIndex).isEmpty();
     }
 
 
-    /** 
+    /**
      * Returns all the classifier objects visible in this frame (null if
      * nothing has yet been classified)
      */
-    public AbstractList<ClassifierObject> getVisibleObjects() { 
-        return classifiedObjects.get(curImageIndex); 
+    public AbstractList<ClassifierObject> getVisibleObjects() {
+        return classifiedObjects.get(curImageIndex);
     }
 
 
@@ -234,7 +243,7 @@ public class ClassifierModel extends Observable implements DataListener//,
     public ClassifierObject getContainingObject(Point p) {
         return getContainingObject((int) p.getX(), (int)p.getY());
     }
-    
+
     /** @return true if and only if there are selected objects in the frame */
     public boolean hasSelectedObjects() {
         return !selected.isEmpty();
@@ -288,7 +297,7 @@ public class ClassifierModel extends Observable implements DataListener//,
     }
 
 
-    /** @return the current image to display; if no Data sets are loaded, 
+    /** @return the current image to display; if no Data sets are loaded,
      * returns null */
     public TOOLImage getCurrentImage() {
         return rawImage;
@@ -320,7 +329,7 @@ public class ClassifierModel extends Observable implements DataListener//,
 
 
 
-   
+
     /**
      * @return the 0 based index of our currently viewable image.
      */
@@ -353,14 +362,14 @@ public class ClassifierModel extends Observable implements DataListener//,
     public boolean canUndo() {
         return undoManager.canUndo();
     }
-    
+
     public boolean canRedo() {
         return undoManager.canRedo();
     }
 
 
     /* Public methods for Controller to access */
-    
+
     /**
      * Asks the datamanager to change the current frame to the one specified
      * at index i.  Note that notifyFrame alerts listeners if there has in
@@ -370,8 +379,8 @@ public class ClassifierModel extends Observable implements DataListener//,
         selected.clear();
         tool.getDataManager().set(i);
     }
-    
-    /** 
+
+    /**
      * Goes one frame previous (if it exists)
      * Note that notifyFrame alerts listeners if there has in
      * fact been a change.
@@ -380,7 +389,7 @@ public class ClassifierModel extends Observable implements DataListener//,
         selected.clear();
         tool.getDataManager().last();
     }
-    
+
     /**
      * Goes one frame forward (if it exists)
      * Note that notifyFrame alerts listeners if there has in
@@ -389,9 +398,9 @@ public class ClassifierModel extends Observable implements DataListener//,
     public void getNextImage() {
         selected.clear();
         tool.getDataManager().next();
-        
+
     }
-    
+
 
 
     /**
@@ -409,7 +418,7 @@ public class ClassifierModel extends Observable implements DataListener//,
         notifyObservers();
     }
 
-    
+
     public void tempMove(int dx, int dy) {
         for (Movable z : getSelected()) {
             z.move(dx, dy);
@@ -419,7 +428,7 @@ public class ClassifierModel extends Observable implements DataListener//,
     }
 
 
-    
+
 
     public void commitMove(AbstractList<ClassifierObject> toMove, int dx, int dy) {//AbstractList<Movable> toMove, int dx, int dy) {
         /*
@@ -427,7 +436,7 @@ public class ClassifierModel extends Observable implements DataListener//,
         */
         UndoableEdit edit =
             new MoveEdit<ClassifierObject>(getSelected(), dx, dy);
-        
+
         //UndoableEdit edit = new MoveEdit(toMove, dx, dy);
         undoSupport.postEdit(edit);
 
@@ -441,7 +450,7 @@ public class ClassifierModel extends Observable implements DataListener//,
      */
     public void move(AbstractList<Movable> toMove, int dx, int dy) {
         if (toMove.isEmpty()) { return; }
-        
+
         UndoableEdit edit =
             new MoveEdit<Movable>(toMove, dx, dy);
         undoSupport.postEdit(edit);
@@ -456,7 +465,7 @@ public class ClassifierModel extends Observable implements DataListener//,
      */
     public void remove(AbstractList<ClassifierObject> toRemove) {
         if (toRemove == null) { return; }
-        
+
         int[] indices = new int[toRemove.size()];
         // Search our visible objects for each element of the toRemove list
         // and note where it is found.  This allows us to undo and redo
@@ -468,17 +477,17 @@ public class ClassifierModel extends Observable implements DataListener//,
             new RemoveEdit<ClassifierObject>(getVisibleObjects(), indices, selected);//, this, getID());
         undoSupport.postEdit(edit);
 
-        
+
         setChanged();
         notifyObservers();
     }
-    
+
     /**
      * Allows a user to relabel an object he places down on the screen;
      * for instance if he calls a goal post the left one but he sees it's
      * actually the right, he can reclassify it via this method.
      * @param o
-     * @param id the new ID for the classified object.  
+     * @param id the new ID for the classified object.
      */
     public void relabel(ClassifierObject o, int id) {
         setChanged();
@@ -488,7 +497,7 @@ public class ClassifierModel extends Observable implements DataListener//,
 
     /**
      *
-     */ 
+     */
     // TODO:  Figure out how to resize
     public void resize(ClassifierObject o) {
         setChanged();
@@ -497,8 +506,8 @@ public class ClassifierModel extends Observable implements DataListener//,
 
 
     /**
-     * Clears all classified objects from the currently visible frame.  
-     * Anything in the selected list will be removed as well. 
+     * Clears all classified objects from the currently visible frame.
+     * Anything in the selected list will be removed as well.
      */
     public void clear() {
         // Takes care of deleting the objects from the lists.
@@ -532,9 +541,9 @@ public class ClassifierModel extends Observable implements DataListener//,
         }
     }
 
-    
-    
-    
+
+
+
     /**
      * An undo/redo adapter.  This is notified whenever an undoable action
      * occurs.
