@@ -59,6 +59,10 @@ public interface Vision {
     public static final byte MAGENTA = 26;
     public static final byte PURPLE = 27;
 
+    // Not all of the colors enumerated above are used in color tables;
+    // some are used for debugging purposes.
+    public static final int NUM_COLOR_TABLE_COLORS = 14;
+
     public static final String[] COLOR_STRINGS = {
 	"Undefined", "White", "Green", "Blue",
 	"Yellow", "Orange", "Yellow/White", "Blue/Green",
@@ -98,16 +102,6 @@ public interface Vision {
     public static final Color LIGHT_SKY_BLUE_COLOR = new Color(135,206,250); // LIGHT SKY BLUE 25
     public static final Color MAGENTA_COLOR = new Color(255,0,255); // MAGENTA 26
     public static final Color PURPLE_COLOR = new Color(128,0,128); // PURPLE 27
-
-
-
-    /*
-    public static final Color LWCOLOR = new Color(100, 100, 100);
-    public static final Color OYCOLOR = new Color(180, 140, 30);
-    public static final Color BGCOLOR = new Color(0, 204, 204);
-    public static final Color YWCOLOR = new Color(255, 255, 153);
-    public static final Color ORCOLOR = new Color(169, 69, 19);
-    */
 
     public static final Color[] COLORS = {GRAY_COLOR,
                                           WHITE_COLOR,

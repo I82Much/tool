@@ -33,35 +33,37 @@ import TOOL.Vision.Vision;
 public class ColorSwatchPanel extends JPanel implements ActionListener, KeyListener {
 
     private Color[] theColors = Vision.COLORS;
-    private ColorSwatch[] theSwatches; 
+    private static final int NUM_COLORS = Vision.NUM_COLOR_TABLE_COLORS;
+
+    private ColorSwatch[] theSwatches;
     private ColorSwatchParent parent;
-    
+
     public static final int BORDER_SIZE = 5;
 
     public ColorSwatchPanel(ColorSwatchParent parent, int size) {
-	super();
-	this.parent = parent;
-	
-	ButtonGroup a = new ButtonGroup();
+        super();
+        this.parent = parent;
+
+        ButtonGroup a = new ButtonGroup();
         setLayout(new GridLayout(2, theColors.length/2));
 
-        Dimension staticSize = new Dimension(size * theColors.length/2 + 
+        Dimension staticSize = new Dimension(size * NUM_COLORS/2 + 
                                              2 * BORDER_SIZE,
                                              size * 2 + 2 * BORDER_SIZE);
         setMinimumSize(staticSize);
         setMaximumSize(staticSize);
         setPreferredSize(staticSize);
 
-	theSwatches = new ColorSwatch[theColors.length];
-	for (int i = 0; i < theColors.length; i++) {
-	    // Set the text in the box to be 1 based indexing, but set the
-	    // tool text based on the constant in Tool.Vision.Vision
-	    theSwatches[i] = new ColorSwatch(size, ""+ (i+1), 
-			     Vision.COLOR_STRINGS[i],
-			     theColors[i]);
-	    add(theSwatches[i]);
-	    a.add(theSwatches[i]);
-	    theSwatches[i].addActionListener(this);
+        theSwatches = new ColorSwatch[NUM_COLORS];
+        for (int i = 0; i < NUM_COLORS; i++) {
+            // Set the text in the box to be 1 based indexing, but set the
+            // tool text based on the constant in Tool.Vision.Vision
+            theSwatches[i] = new ColorSwatch(size, ""+ (i+1), 
+                                             Vision.COLOR_STRINGS[i],
+                                             theColors[i]);
+            add(theSwatches[i]);
+            a.add(theSwatches[i]);
+            theSwatches[i].addActionListener(this);
 	}
         
         setBorder(BorderFactory.createEmptyBorder(BORDER_SIZE, BORDER_SIZE,
@@ -70,9 +72,9 @@ public class ColorSwatchPanel extends JPanel implements ActionListener, KeyListe
     }
 
     public void setCrossedOut(boolean choice) {
-	for (int i = 0; i < theSwatches.length; i++) {
-	    theSwatches[i].setCrossedOut(choice);
-	}
+        for (int i = 0; i < theSwatches.length; i++) {
+            theSwatches[i].setCrossedOut(choice);
+        }
     }
 
     /**
